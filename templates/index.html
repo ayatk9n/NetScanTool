@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A local web-based network port scanner.">
+    <title>netScanTool</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <!-- ── HEADER ──────────────────────────────────────────────── -->
+    <header id="site-header">
+        <div class="header-inner">
+            <h1>netScanTool</h1>
+            <button id="btn-dark-mode" class="dark-toggle" title="Toggle Dark Mode">◐</button>
+        </div>
+    </header>
+
+    <!-- ── MAIN LAYOUT ────────────────────────────────────────── -->
+    <div class="layout">
+
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <nav>
+                <span class="sidebar-label">PRESETS</span>
+                <button class="nav-btn" data-preset="common" id="btn-common">common ports</button>
+                <button class="nav-btn" data-preset="web" id="btn-web">web</button>
+                <button class="nav-btn" data-preset="email" id="btn-email">email</button>
+                <button class="nav-btn" data-preset="database" id="btn-database">database</button>
+                <button class="nav-btn" data-preset="remote_access" id="btn-remote">remote access</button>
+                <button class="nav-btn" id="btn-custom">custom</button>
+
+                <span class="sidebar-label sidebar-label-history">HISTORY</span>
+                <button class="nav-btn" id="btn-show-history">view history</button>
+                <button class="nav-btn" id="btn-clear-history">clear history</button>
+            </nav>
+        </aside>
+
+        <!-- Content -->
+        <main id="content">
+            <div class="content-wrap">
+                <!-- ── Scan Form ──────────────────────────────────── -->
+                <section class="scan-form">
+                    <h2>scan target</h2>
+
+                    <div class="form-grid">
+                        <div class="field-group target-field">
+                            <label for="input-target">TARGET IP / HOSTNAME</label>
+                            <input type="text" id="input-target" placeholder="127.0.0.1" value="127.0.0.1">
+                        </div>
+
+                        <div class="field-group mode-field">
+                            <label for="select-port-mode">MODE</label>
+                            <select id="select-port-mode">
+                                <option value="range" selected>Range</option>
+                                <option value="list">List</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Port inputs -->
+                    <div id="range-inputs" class="field-row">
+                        <div class="field-group">
+                            <label for="input-start">START PORT</label>
+                            <input type="number" id="input-start" min="1" max="65535" value="1">
+                        </div>
+                        <span class="range-sep">—</span>
+                        <div class="field-group">
+                            <label for="input-end">END PORT</label>
+                            <input type="number" id="input-end" min="1" max="65535" value="1024">
+                        </div>
+                    </div>
+                    <div id="list-input" class="field-group" style="display:none;">
+                        <label for="input-custom-ports">PORT LIST (comma-separated)</label>
+                        <input type="text" id="input-custom-ports" placeholder="22, 80, 443, 3306, 8080">
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label for="select-throttle">SCAN SPEED</label>
+                            <select id="select-throttle">
+                                <option value="normal" selected>Normal (0.5s / 100 threads)</option>
+                                <option value="sneaky">Sneaky (2.0s / 10 threads)</option>
+                                <option value="aggressive">Aggressive (0.2s / 200 threads)</option>
+                            </select>
+                        </div>
+                        <div class="field-group scan-field">
+                            <label>&nbsp;</label>
+                            <button id="btn-scan" class="scan-btn">► SCAN</button>
+                        </div>
+                    </div>
+
+                    <div class="field-group preset-info" id="preset-info" style="display:none;">
+                        <span class="preset-tag" id="preset-tag"></span>
+                    </div>
+                </section>
+
+                <!-- Status -->
+                <div id="status" class="status" style="display:none;"></div>
+
+                <!-- Loading bar -->
+                <div id="loader" class="loader" style="display:none;">
+                    <div class="loader-bar"></div>
+                </div>
+
+                <!-- Results -->
+                <section id="results" class="results" style="display:none;">
+                    <h2>results</h2>
+                    <div class="result-meta" id="result-meta"></div>
+                    <div class="export-bar" id="export-bar" style="display:none;">
+                        <button class="export-btn" id="btn-export-csv">⬇ CSV</button>
+                        <button class="export-btn" id="btn-export-json">⬇ JSON</button>
+                    </div>
+                    <table id="result-table">
+                        <thead>
+                            <tr>
+                                <th>PORT</th>
+                                <th>SERVICE</th>
+                                <th>BANNER</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-body"></tbody>
+                    </table>
+                    <p id="no-ports" class="no-ports" style="display:none;">No open ports found in the scanned range.
+                    </p>
+                </section>
+
+                <!-- History Panel -->
+                <section id="history-panel" class="history-panel" style="display:none;">
+                    <h2>scan history</h2>
+                    <div id="history-list" class="history-list"></div>
+                    <p id="no-history" class="no-ports" style="display:none;">No scan history yet.</p>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ── SCRIPTS ─────────────────────────────────────────────── -->
+    <script>
+        (function () {
+            /* ── Element refs ─────────────────────────────────────── */
+            const inputTarget = document.getElementById("input-target");
+            const inputStart = document.getElementById("input-start");
+            const inputEnd = document.getElementById("input-end");
+            const inputCustom = document.getElementById("input-custom-ports");
+            const selectPortMode = document.getElementById("select-port-mode");
+            const rangeInputs = document.getElementById("range-inputs");
+            const listInput = document.getElementById("list-input");
+            const selectThrottle = document.getElementById("select-throttle");
+            const btnScan = document.getElementById("btn-scan");
+            const presetInfo = document.getElementById("preset-info");
+            const presetTag = document.getElementById("preset-tag");
+            const statusEl = document.getElementById("status");
+            const loader = document.getElementById("loader");
+            const resultsEl = document.getElementById("results");
+            const resultMeta = document.getElementById("result-meta");
+            const resultBody = document.getElementById("result-body");
+            const noPorts = document.getElementById("no-ports");
+            const btnDarkMode = document.getElementById("btn-dark-mode");
+            const presetBtns = document.querySelectorAll("[data-preset]");
+            const btnCustom = document.getElementById("btn-custom");
+            const exportBar = document.getElementById("export-bar");
+            const btnExportCSV = document.getElementById("btn-export-csv");
+            const btnExportJSON = document.getElementById("btn-export-json");
+            const btnShowHistory = document.getElementById("btn-show-history");
+            const btnClearHistory = document.getElementById("btn-clear-history");
+            const historyPanel = document.getElementById("history-panel");
+            const historyList = document.getElementById("history-list");
+            const noHistory = document.getElementById("no-history");
+
+            let presets = {};
+            let activePreset = null;
+            let lastHistoryId = null;
+
+            /* ── Fetch presets from backend ───────────────────────── */
+            fetch("/presets")
+                .then(r => r.json())
+                .then(data => { presets = data; })
+                .catch(() => { });
+
+            /* ── Port mode toggle (Range vs List) ─────────────────── */
+            function setPortMode(mode) {
+                selectPortMode.value = mode;
+                if (mode === "range") {
+                    rangeInputs.style.display = "flex";
+                    listInput.style.display = "none";
+                } else {
+                    rangeInputs.style.display = "none";
+                    listInput.style.display = "block";
+                }
+            }
+
+            selectPortMode.addEventListener("change", () => {
+                setPortMode(selectPortMode.value);
+            });
+
+            /* ── Preset buttons ───────────────────────────────────── */
+            function deactivateAllPresets() {
+                presetBtns.forEach(b => b.classList.remove("active"));
+                btnCustom.classList.remove("active");
+            }
+
+            presetBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const key = btn.dataset.preset;
+                    if (!presets[key]) return;
+
+                    deactivateAllPresets();
+                    btn.classList.add("active");
+
+                    const ports = presets[key].ports;
+                    activePreset = key;
+
+                    // Auto-switch to List mode and populate with preset ports
+                    setPortMode("list");
+                    inputCustom.value = ports.join(", ");
+
+                    presetInfo.style.display = "block";
+                    presetTag.textContent = `Preset: ${presets[key].label} — ${ports.length} specific ports`;
+                });
+            });
+
+            /* Custom button — clears everything and switches to list */
+            btnCustom.addEventListener("click", () => {
+                deactivateAllPresets();
+                btnCustom.classList.add("active");
+                activePreset = null;
+                setPortMode("list");
+                inputCustom.value = "";
+                inputCustom.focus();
+                presetInfo.style.display = "none";
+            });
+
+            /* Clear preset when user edits any port input */
+            function clearPreset() {
+                if (!activePreset) return;
+                activePreset = null;
+                presetInfo.style.display = "none";
+                presetBtns.forEach(b => b.classList.remove("active"));
+            }
+            inputStart.addEventListener("input", clearPreset);
+            inputEnd.addEventListener("input", clearPreset);
+            inputCustom.addEventListener("input", clearPreset);
+
+            /* ── Dark mode toggle (persisted in localStorage) ────── */
+            if (localStorage.getItem("darkMode") === "true") {
+                document.body.classList.add("dark");
+            }
+            btnDarkMode.addEventListener("click", () => {
+                document.body.classList.toggle("dark");
+                localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+            });
+
+            /* ── Scan ─────────────────────────────────────────────── */
+            btnScan.addEventListener("click", async () => {
+                const target = inputTarget.value.trim();
+                if (!target) { showStatus("Enter a target IP or hostname.", true); return; }
+
+                const payload = { target };
+
+                // Throttle
+                payload.throttle = selectThrottle.value;
+
+                // Port selection
+                if (activePreset) {
+                    payload.preset = activePreset;
+                } else if (selectPortMode.value === "list") {
+                    const custom = inputCustom.value.trim();
+                    if (!custom) { showStatus("Enter at least one port in the list.", true); return; }
+                    payload.custom_ports = custom;
+                } else {
+                    payload.start_port = parseInt(inputStart.value, 10);
+                    payload.end_port = parseInt(inputEnd.value, 10);
+                    if (isNaN(payload.start_port) || isNaN(payload.end_port)) {
+                        showStatus("Port values must be numbers.", true); return;
+                    }
+                    if (payload.start_port > payload.end_port) {
+                        showStatus("Start port must be ≤ end port.", true); return;
+                    }
+                }
+
+                // UI state
+                btnScan.disabled = true;
+                btnScan.textContent = "SCANNING…";
+                loader.style.display = "block";
+                resultsEl.style.display = "none";
+                statusEl.style.display = "none";
+                historyPanel.style.display = "none";
+                exportBar.style.display = "none";
+
+                try {
+                    const resp = await fetch("/scan", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                    });
+                    const data = await resp.json();
+
+                    if (!resp.ok) {
+                        showStatus(data.error || "Scan failed.", true);
+                        return;
+                    }
+
+                    lastHistoryId = data.history_id || null;
+                    renderResults(data);
+                } catch (err) {
+                    showStatus("Network error — is the server running?", true);
+                } finally {
+                    btnScan.disabled = false;
+                    btnScan.textContent = "► SCAN";
+                    loader.style.display = "none";
+                }
+            });
+
+            /* ── Export ────────────────────────────────────────────── */
+            btnExportCSV.addEventListener("click", () => {
+                if (lastHistoryId) window.location.href = `/export/${lastHistoryId}/csv`;
+            });
+            btnExportJSON.addEventListener("click", () => {
+                if (lastHistoryId) window.location.href = `/export/${lastHistoryId}/json`;
+            });
+
+            /* ── History ──────────────────────────────────────────── */
+            btnShowHistory.addEventListener("click", async () => {
+                resultsEl.style.display = "none";
+                historyPanel.style.display = "block";
+                historyList.innerHTML = "";
+                noHistory.style.display = "none";
+
+                try {
+                    const resp = await fetch("/history");
+                    const data = await resp.json();
+                    if (data.length === 0) {
+                        noHistory.style.display = "block";
+                        return;
+                    }
+                    data.forEach(scan => {
+                        const entry = document.createElement("div");
+                        entry.className = "history-entry";
+                        entry.innerHTML =
+                            `<span class="hist-time">${escHtml(scan.timestamp)}</span>` +
+                            `<span class="hist-target">${escHtml(scan.target)}</span>` +
+                            `<span class="hist-open">${scan.open_ports.length} open / ${scan.ports_scanned} scanned</span>` +
+                            `<span class="hist-elapsed">${scan.scan_time}s</span>` +
+                            `<button class="hist-view-btn" data-id="${scan.id}">view</button>` +
+                            `<button class="hist-del-btn" data-id="${scan.id}">×</button>`;
+                        historyList.appendChild(entry);
+
+                        entry.querySelector(".hist-view-btn").addEventListener("click", () => {
+                            lastHistoryId = scan.id;
+                            historyPanel.style.display = "none";
+                            renderResults(scan);
+                        });
+
+                        entry.querySelector(".hist-del-btn").addEventListener("click", async (e) => {
+                            e.stopPropagation();
+                            await fetch(`/history/${scan.id}`, { method: "DELETE" });
+                            entry.remove();
+                            if (historyList.children.length === 0) noHistory.style.display = "block";
+                        });
+                    });
+                } catch {
+                    showStatus("Failed to load history.", true);
+                }
+            });
+
+            btnClearHistory.addEventListener("click", async () => {
+                await fetch("/history", { method: "DELETE" });
+                historyList.innerHTML = "";
+                noHistory.style.display = "block";
+            });
+
+            /* ── Helpers ───────────────────────────────────────────── */
+            function showStatus(msg, isError) {
+                statusEl.textContent = msg;
+                statusEl.className = "status" + (isError ? " error" : "");
+                statusEl.style.display = "block";
+            }
+
+            function renderResults(data) {
+                resultsEl.style.display = "block";
+                resultBody.innerHTML = "";
+
+                resultMeta.innerHTML =
+                    `<span>Target: <strong>${escHtml(data.target)}</strong></span>` +
+                    (data.resolved_ip !== data.target ? ` <span>(${escHtml(data.resolved_ip)})</span>` : "") +
+                    ` &nbsp;|&nbsp; Ports scanned: <strong>${data.ports_scanned}</strong>` +
+                    ` &nbsp;|&nbsp; Open: <strong>${data.open_ports.length}</strong>` +
+                    ` &nbsp;|&nbsp; Time: <strong>${data.scan_time}s</strong>`;
+
+                if (lastHistoryId) {
+                    exportBar.style.display = "flex";
+                }
+
+                if (data.open_ports.length === 0) {
+                    noPorts.style.display = "block";
+                    document.getElementById("result-table").style.display = "none";
+                    return;
+                }
+
+                noPorts.style.display = "none";
+                document.getElementById("result-table").style.display = "table";
+
+                data.open_ports.forEach(p => {
+                    const tr = document.createElement("tr");
+                    const banner = p.banner || "—";
+                    tr.innerHTML =
+                        `<td>${p.port}</td>` +
+                        `<td>${escHtml(p.service)}</td>` +
+                        `<td class="banner-cell">${escHtml(banner)}</td>` +
+                        `<td class="open-tag">OPEN</td>`;
+                    resultBody.appendChild(tr);
+                });
+            }
+
+            function escHtml(str) {
+                const d = document.createElement("div");
+                d.textContent = str;
+                return d.innerHTML;
+            }
+        })();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,551 @@
+/* ── Reset ──────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #ffffff;
+    --fg: #000000;
+    --border: #000000;
+    --muted: #555555;
+    --error: #aa0000;
+    --accent: #006600;
+}
+
+body.dark {
+    --bg: #111111;
+    --fg: #d0d0d0;
+    --border: #d0d0d0;
+    --muted: #999999;
+    --error: #ff5555;
+    --accent: #55ff55;
+}
+
+body {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px;
+    line-height: 1.5;
+    background: var(--bg);
+    color: var(--fg);
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ── Smooth transition for all themed elements ─────────── */
+*,
+*::before,
+*::after {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+#site-header {
+    border-bottom: 1px solid var(--border);
+    padding: 4px 12px;
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#site-header h1 {
+    font-size: 18px;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.dark-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--fg);
+    font-size: 16px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+}
+
+.dark-toggle:hover {
+    background: var(--fg);
+    color: var(--bg);
+}
+
+/* ── Layout ────────────────────────────────────────────── */
+.layout {
+    display: flex;
+    min-height: calc(100vh - 36px);
+}
+
+/* ── Sidebar ───────────────────────────────────────────── */
+#sidebar {
+    width: 130px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    padding: 4px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#sidebar nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-label {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 2px 8px 2px;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-label-history {
+    margin-top: 6px;
+}
+
+.nav-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 3px 8px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.nav-btn:first-of-type {
+    border-top: 1px solid var(--border);
+}
+
+.nav-btn:hover {
+    text-decoration: underline;
+}
+
+.nav-btn.active {
+    background: var(--fg);
+    color: var(--bg);
+}
+
+/* ── Main Content ──────────────────────────────────────── */
+#content {
+    flex: 1;
+    padding: 8px 16px;
+}
+
+.content-wrap {
+    max-width: 650px;
+}
+
+/* ── Scan Form ─────────────────────────────────────────── */
+.scan-form h2 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.field-group {
+    margin-bottom: 6px;
+}
+
+.field-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 1px;
+}
+
+.field-group input,
+.field-group select {
+    width: 100%;
+    padding: 3px 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    outline: none;
+}
+
+.field-group select {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23555'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    padding-right: 20px;
+}
+
+body.dark .field-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+}
+
+.field-group input:disabled,
+.field-group select:disabled {
+    opacity: 0.5;
+}
+
+/* ── Form Grid ─────────────────────────────────────────── */
+.form-grid {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.form-grid .field-group {
+    margin-bottom: 0;
+}
+
+.target-field {
+    flex: 1;
+}
+
+.mode-field {
+    width: 80px;
+    flex-shrink: 0;
+}
+
+.scan-field {
+    width: 100px;
+    flex-shrink: 0;
+}
+
+/* ── Port row ──────────────────────────────────────────── */
+.field-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.field-row .field-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.range-sep {
+    padding-bottom: 3px;
+    font-weight: bold;
+}
+
+.preset-info {
+    margin-bottom: 6px;
+}
+
+.preset-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+}
+
+.scan-btn {
+    width: 100%;
+    padding: 3px 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.scan-btn:hover:not(:disabled) {
+    background: var(--fg);
+    color: var(--bg);
+}
+
+.scan-btn:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+/* ── Status ────────────────────────────────────────────── */
+.status {
+    margin-top: 8px;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    font-size: 12px;
+}
+
+.status.error {
+    border-color: var(--error);
+    color: var(--error);
+}
+
+/* ── Loader ────────────────────────────────────────────── */
+.loader {
+    margin-top: 8px;
+    height: 3px;
+    background: #ddd;
+    overflow: hidden;
+}
+
+body.dark .loader {
+    background: #333;
+}
+
+.loader-bar {
+    height: 100%;
+    width: 30%;
+    background: var(--fg);
+    animation: slide 1s ease-in-out infinite;
+}
+
+@keyframes slide {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(400%);
+    }
+}
+
+/* ── Results ───────────────────────────────────────────── */
+.results {
+    margin-top: 12px;
+}
+
+.results h2 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.result-meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+.result-meta strong {
+    color: var(--fg);
+}
+
+/* ── Export Bar ─────────────────────────────────────────── */
+.export-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.export-btn {
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.export-btn:hover {
+    background: var(--fg);
+    color: var(--bg);
+}
+
+/* ── Results Table ─────────────────────────────────────── */
+#result-table {
+    font-family: 'Courier New', Courier, monospace;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+#result-table th,
+#result-table td {
+    text-align: left;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+}
+
+#result-table th {
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.open-tag {
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.banner-cell {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.no-ports {
+    margin-top: 6px;
+    padding: 6px;
+    border: 1px dashed var(--border);
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+/* ── History Panel ─────────────────────────────────────── */
+.history-panel {
+    margin-top: 12px;
+}
+
+.history-panel h2 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.history-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 6px;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    font-size: 11px;
+}
+
+.history-entry:last-child {
+    border-bottom: 1px solid var(--border);
+}
+
+.hist-time {
+    color: var(--muted);
+    font-family: monospace;
+    font-size: 10px;
+    min-width: 120px;
+}
+
+.hist-target {
+    font-weight: bold;
+    min-width: 100px;
+}
+
+.hist-open {
+    color: var(--muted);
+    flex: 1;
+}
+
+.hist-elapsed {
+    color: var(--muted);
+    font-family: monospace;
+    font-size: 10px;
+}
+
+.hist-view-btn,
+.hist-del-btn {
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.hist-view-btn:hover {
+    background: var(--fg);
+    color: var(--bg);
+}
+
+.hist-del-btn {
+    color: var(--error);
+    border-color: var(--error);
+    font-weight: bold;
+}
+
+.hist-del-btn:hover {
+    background: var(--error);
+    color: var(--bg);
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 640px) {
+    .layout {
+        flex-direction: column;
+    }
+
+    #sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 4px;
+        gap: 2px;
+    }
+
+    #sidebar nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2px;
+        width: 100%;
+    }
+
+    .sidebar-label {
+        width: 100%;
+        padding: 2px 4px;
+    }
+
+    .nav-btn {
+        width: auto;
+        border: 1px solid var(--border);
+        padding: 2px 6px;
+    }
+
+    #content {
+        padding: 8px;
+    }
+
+    .content-wrap {
+        max-width: 100%;
+    }
+
+    .form-grid {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .mode-field,
+    .scan-field {
+        width: 100%;
+    }
+
+    .history-entry {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .hist-time,
+    .hist-target {
+        min-width: auto;
+    }
+
+    .banner-cell {
+        max-width: 150px;
+    }
+}
