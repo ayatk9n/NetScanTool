@@ -1,16 +1,3 @@
-"""
-Web-Based Port Scanner — Flask Backend
-Provides API endpoints for scanning ports on a target IP
-and returning results as JSON.
-
-Features:
-  - TCP connect scan with concurrent threads
-  - Banner grabbing on open ports
-  - Preset and custom port groups
-  - Adjustable scan speed (throttle control)
-  - Scan history persisted in SQLite
-  - Export results as CSV or JSON
-"""
 
 import csv
 import io
@@ -25,10 +12,8 @@ from flask import Flask, Response, render_template, request, jsonify
 
 app = Flask(__name__)
 
-# ── Database path ─────────────────────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scan_history.db")
 
-# ── Common service names by port ──────────────────────────────────────
 SERVICE_NAMES = {
     21: "FTP", 22: "SSH", 23: "Telnet", 25: "SMTP", 53: "DNS",
     80: "HTTP", 110: "POP3", 111: "RPCBind", 135: "MSRPC",
@@ -39,7 +24,6 @@ SERVICE_NAMES = {
     8080: "HTTP Proxy", 8443: "HTTPS Alt", 27017: "MongoDB",
 }
 
-# ── Preset port groups ────────────────────────────────────────────────
 PRESETS = {
     "web":           {"label": "Web",           "ports": [80, 443, 8080, 8443]},
     "email":         {"label": "Email",         "ports": [25, 110, 143, 465, 587, 993, 995]},
@@ -49,7 +33,7 @@ PRESETS = {
                                                           443, 993, 995, 3306, 3389, 5432, 8080]},
 }
 
-# ── Throttle presets ──────────────────────────────────────────────────
+
 THROTTLE_PRESETS = {
     "sneaky":     {"label": "Sneaky",     "timeout": 2.0,  "max_threads": 10},
     "normal":     {"label": "Normal",     "timeout": 0.5,  "max_threads": 100},
@@ -60,7 +44,6 @@ DEFAULT_TIMEOUT = 0.5
 DEFAULT_MAX_THREADS = 100
 
 
-# ── Database init ─────────────────────────────────────────────────────
 def _get_db():
     """Return a new connection to the SQLite history database."""
     conn = sqlite3.connect(DB_PATH)
@@ -87,7 +70,6 @@ def _init_db():
 _init_db()
 
 
-# ── Helpers ───────────────────────────────────────────────────────────
 def _is_valid_ip(ip: str) -> bool:
     """Basic IPv4 validation."""
     pattern = r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"
@@ -180,7 +162,6 @@ def _parse_custom_ports(raw: str) -> list[int]:
     return sorted(ports)
 
 
-# ── Routes ────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -218,7 +199,7 @@ def do_scan():
         timeout = max(0.1, min(timeout, 5.0))
         max_threads = max(1, min(max_threads, 200))
 
-    # ── Resolve target ────────────────────────────────────────────
+
     if not target:
         return jsonify({"error": "Target IP or hostname is required."}), 400
 
